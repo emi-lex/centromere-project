@@ -1,6 +1,10 @@
 import numpy as np
 import sklearn.metrics
 import edlib
+from Bio.Seq import Seq
+from Bio.SeqIO import FastaIO
+from Bio.SeqRecord import SeqRecord
+from sklearn.cluster import DBSCAN, OPTICS
 
 
 def my_edit_distance(str1, str2):
@@ -41,9 +45,11 @@ def parse_monomersfa(p_monomers_file):
         if '>' not in s:
             strg += s[:-1]
         else:
+            # strg = str(Seq(strg).reverse_complement())
             monomers_str_array.append(strg)
             strg = ""
     if strg != "":
+        # strg = str(Seq(strg).reverse_complement())
         monomers_str_array.append(strg)
     return monomers_str_array
 
@@ -56,9 +62,27 @@ centromere_str = parse_centromerefa(centromere_file)  # absolutely right
 monomers_str_array = parse_monomersfa(monomers_file)  # absolutely right
 
 tsv_array = [s.split() for s in tsv_file.readlines()]  # absolutely right
-blocks_list_char_array = [list(centromere_str[int(s[2]):int(s[3]) + 1]) for s in
-                          tsv_array]  # needs to be List[List[char]]  # absolutely right
-blocks_str_array = [str(centromere_str[int(s[2]):int(s[3]) + 1]) for s in tsv_array]  # absolutely right
+# blocks_list_char_array = [list(centromere_str[int(s[2]):int(s[3]) + 1]) for s in
+#                           tsv_array]  # needs to be List[List[char]]  # absolutely right
+
+blocks_list_char_array = []
+for s in tsv_array:
+    tmp = centromere_str[int(s[2]):int(s[3]) + 1]
+    if "'" in s[1]:
+        blocks_list_char_array.append(list(str(Seq(tmp).reverse_complement())))
+    else:
+        blocks_list_char_array.append(list(tmp))
+
+# blocks_str_array = [str(centromere_str[int(s[2]):int(s[3]) + 1]) for s in tsv_array]  # absolutely right
+
+blocks_str_array = []
+for s in tsv_array:
+    tmp = str(centromere_str[int(s[2]):int(s[3]) + 1])
+    if "'" in s[1]:
+        blocks_str_array.append(str(Seq(tmp).reverse_complement()))
+    else:
+        blocks_str_array.append(tmp)
+
 labels_array = [int(s[1][3:].split("_")[0].replace("'", "")) for s in tsv_array]  # absolutely right
 labels_without_repeats_array = []  # absolutely right
 for x in labels_array:
@@ -82,19 +106,53 @@ for i in range(len(blocks_str_array)):
 
 def silhouette_score(blocks_char_array, labels, num=500):
     max_size = -1
-    for str in blocks_char_array:
-        max_size = max(max_size, len(str))
+    for str1 in blocks_char_array:
+        max_size = max(max_size, len(str1))
 
-    for str in blocks_char_array:
-        str += ['N' for _ in range(max_size - len(str))]
+    # reads_lst = []
+    # i = 0
+    # for x in blocks_char_array:
+    #     reads_lst.append(SeqRecord(Seq("".join(x)), id="block_" + str(i), name="block_" + str(i), description=""))
+    #     i += 1
+
+    for str1 in blocks_char_array:
+        str1 += ['N' for _ in range(max_size - len(str1))]
 
     blocks_str_np_array = np.array(blocks_char_array)
     blocks_str_np_array_num = blocks_str_np_array.view(np.int32)
+    # with open("temp.txt", 'w') as f:
+    #     for line in blocks_str_np_array_num:
+    #         f.write(" ".join([str(x) for x in list(line)]) + '\n')
+    #
+    # with open("blocks.fa", "w") as f:
+    #     fasta_out = FastaIO.FastaWriter(f, wrap=None)
+    #     fasta_out.write_file(reads_lst)
 
     labels_np_array = np.array(labels)
 
     return sklearn.metrics.silhouette_score(X=blocks_str_np_array_num[:num], labels=labels_np_array[:num],
                                             metric=edlib_edit_distance)
+
+
+def dbscan(blocks_char_array):
+    max_size = -1
+    for str1 in blocks_char_array:
+        max_size = max(max_size, len(str1))
+
+    for str1 in blocks_char_array:
+        str1 += ['N' for _ in range(max_size - len(str1))]
+
+    blocks_str_np_array = np.array(blocks_char_array)
+    blocks_str_np_array_num = blocks_str_np_array.view(np.int32)
+
+    # clustering = OPTICS(max_eps=3, metric=edlib_edit_distance, n_jobs=2, cluster_method='dbscan').fit(
+    #     blocks_str_np_array_num)
+    clustering = DBSCAN(eps=3, metric=edlib_edit_distance, n_jobs=2).fit(blocks_str_np_array_num)
+    return clustering.labels_
+
+
+# def agglomerative_clustering(blocks_char_array):
+#     return
 
 
 def distortion(blocks, labels,
@@ -129,12 +187,16 @@ def R(m, m_blocks):
     return sum_distance / len(m_blocks)
 
 
-print("Silhouette score: ", silhouette_score(blocks_list_char_array, labels_array))
+# print("Silhouette score:", silhouette_score(blocks_list_char_array, labels_array))
 
-print("DBI: ", DBI(monomers_str_array, centres_and_mblocks_map))
+# print("DBI:", DBI(monomers_str_array, centres_and_mblocks_map))
 
-print("Distortion: ", distortion(blocks_str_array, labels_array, labels_and_monomers_map))
+# print("Distortion:", distortion(blocks_str_array, labels_array, labels_and_monomers_map))
 
+print("meow")
+print("DBSCAN:\n", dbscan(blocks_list_char_array))
+
+# print(silhouette_score(blocks_list_char_array[:500], dbscan(blocks_list_char_array[:500])))
 centromere_file.close()
 tsv_file.close()
 monomers_file.close()
