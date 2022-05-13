@@ -3,8 +3,6 @@ import edlib
 from Bio.Seq import Seq
 from joblib import Memory
 from sys import argv
-from sklearn.datasets import make_blobs
-import pandas as pd
 import hdbscan
 
 name, final_decomposition, cen = argv
@@ -23,7 +21,7 @@ def parse_centromerefa(p_centromere_file):
     return centromere_str
 
 
-def hdbscan(blocks_char_array):
+def my_hdbscan(blocks_char_array):
     max_size = -1
     for str1 in blocks_char_array:
         max_size = max(max_size, len(str1))
@@ -56,4 +54,4 @@ for s in tsv_array:
         blocks_list_char_array.append(list(tmp))
 
 print("hdbscan")
-print("DBSCAN:\n", hdbscan(blocks_list_char_array))
+print("DBSCAN:\n", my_hdbscan(blocks_list_char_array))
