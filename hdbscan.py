@@ -1,8 +1,11 @@
 import numpy as np
 import edlib
 from Bio.Seq import Seq
-from sklearn.cluster import DBSCAN
+from joblib import Memory
 from sys import argv
+from sklearn.datasets import make_blobs
+import pandas as pd
+import hdbscan
 
 name, final_decomposition, cen = argv
 
@@ -20,7 +23,7 @@ def parse_centromerefa(p_centromere_file):
     return centromere_str
 
 
-def dbscan(blocks_char_array):
+def hdbscan(blocks_char_array):
     max_size = -1
     for str1 in blocks_char_array:
         max_size = max(max_size, len(str1))
@@ -31,8 +34,13 @@ def dbscan(blocks_char_array):
     blocks_str_np_array = np.array(blocks_char_array)
     blocks_str_np_array_num = blocks_str_np_array.view(np.int32)
 
-    clustering = DBSCAN(eps=3, metric=edlib_edit_distance, n_jobs=2).fit(blocks_str_np_array_num) # 2 threads, change to 16 on server
-    return clustering.labels_
+    clusterer = hdbscan.HDBSCAN()
+    clusterer.fit(blocks_str_np_array_num)
+    clusterer = hdbscan.HDBSCAN(algorithm='best', alpha=1.0, approx_min_span_tree=True,
+                                gen_min_span_tree=False, leaf_size=40, memory=Memory(cachedir=None),
+                                metric=edlib_edit_distance, min_cluster_size=5, min_samples=None, p=None)
+
+    return clusterer.labels_
 
 
 tsv_file = open(final_decomposition)
@@ -47,5 +55,5 @@ for s in tsv_array:
     else:
         blocks_list_char_array.append(list(tmp))
 
-print("dbscan")
-print("DBSCAN:\n", dbscan(blocks_list_char_array))
+print("hdbscan")
+print("DBSCAN:\n", hdbscan(blocks_list_char_array))
