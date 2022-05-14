@@ -4,6 +4,7 @@ from Bio.Seq import Seq
 from joblib import Memory
 from sys import argv
 import hdbscan
+import time
 
 name, final_decomposition, cen = argv
 
@@ -32,14 +33,18 @@ def my_hdbscan(blocks_char_array):
     blocks_str_np_array = np.array(blocks_char_array)
     blocks_str_np_array_num = blocks_str_np_array.view(np.int32)
 
-    clusterer = hdbscan.HDBSCAN()
-    clusterer.fit(blocks_str_np_array_num)
+    start = time.time()
+    # clusterer = hdbscan.HDBSCAN()
     clusterer = hdbscan.HDBSCAN(algorithm='best', alpha=1.0, approx_min_span_tree=True,
                                 gen_min_span_tree=False, leaf_size=40, memory=Memory(cachedir=None),
-                                metric=edlib_edit_distance, min_cluster_size=5, min_samples=None, p=None)
+                                metric=edlib_edit_distance, min_cluster_size=50, min_samples=None, p=None)
+    clusterer.fit(blocks_str_np_array_num)
+    end = time.time()
+    with open('out_hdbscan_1000.txt', 'w') as f:
+        for s in clusterer.labels_:
+            f.write(str(s) + '\n')
 
-    return clusterer.labels_
-
+    return end - start
 
 tsv_file = open(final_decomposition)
 centromere_file = open(cen)
@@ -54,4 +59,4 @@ for s in tsv_array:
         blocks_list_char_array.append(list(tmp))
 
 print("hdbscan")
-print("DBSCAN:\n", my_hdbscan(blocks_list_char_array))
+print("DBSCAN:\n", my_hdbscan(blocks_list_char_array[:1000]))
