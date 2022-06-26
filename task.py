@@ -187,14 +187,13 @@ def R(m, m_blocks):
     return sum_distance / len(m_blocks)
 
 
-# print("Silhouette score:", silhouette_score(blocks_list_char_array, labels_array))
+print("Silhouette score:", silhouette_score(blocks_list_char_array, labels_array))
 
-# print("DBI:", DBI(monomers_str_array, centres_and_mblocks_map))
+print("DBI:", DBI(monomers_str_array, centres_and_mblocks_map))
 
-# print("Distortion:", distortion(blocks_str_array, labels_array, labels_and_monomers_map))
+print("Distortion:", distortion(blocks_str_array, labels_array, labels_and_monomers_map))
 
-print("meow")
-print("DBSCAN:\n", dbscan(blocks_list_char_array))
+# print("DBSCAN:\n", dbscan(blocks_list_char_array))
 
 # print(silhouette_score(blocks_list_char_array[:500], dbscan(blocks_list_char_array[:500])))
 centromere_file.close()
