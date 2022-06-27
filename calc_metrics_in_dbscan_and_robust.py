@@ -2,13 +2,13 @@ from Bio.Seq import Seq
 from task import parse_monomersfa, silhouette_score, distortion, DBI, parse_centromerefa
 
 
-def parse_files(labels_array):
+def parse_files(labels_array, monomers_str_array):
     tsv_file = open("final_decomposition.tsv")
-    monomers_file = open("monomers.fa")
+    # monomers_file = open("monomers.fa")
     centromere_file = open("cenX.fa")
 
     centromere_str = parse_centromerefa(centromere_file)  # absolutely right
-    monomers_str_array = parse_monomersfa(monomers_file)  # absolutely right
+    # monomers_str_array = parse_monomersfa(monomers_file)  # absolutely right
 
     tsv_array = [s.split() for s in tsv_file.readlines()[:1000]]  # absolutely right
     # blocks_list_char_array = [list(centromere_str[int(s[2]):int(s[3]) + 1]) for s in
@@ -21,6 +21,7 @@ def parse_files(labels_array):
             blocks_list_char_array.append(list(str(Seq(tmp).reverse_complement())))
         else:
             blocks_list_char_array.append(list(tmp))
+
 
     # blocks_str_array = [str(centromere_str[int(s[2]):int(s[3]) + 1]) for s in tsv_array]  # absolutely right
 
@@ -51,21 +52,53 @@ def parse_files(labels_array):
         else:
             centres_and_mblocks_map[tmp].append(blocks_str_array[i])
 
-    return blocks_list_char_array, blocks_str_array, labels_and_monomers_map, monomers_str_array, centres_and_mblocks_map
+    return blocks_list_char_array, blocks_str_array, labels_and_monomers_map, centres_and_mblocks_map
 
 
-def calc_metrics(labels_filename, text):
-    labels_array = []
+def save_fasta(filename, orfs):
+    with open(filename, "w") as output_handle:
+        from Bio.AlignIO import FastaIO
+        fasta_out = FastaIO.FastaWriter(output_handle, wrap=None)
+        fasta_out.write_file(orfs)
+
+
+def run_clustal(mappings, clustal_dir, pair_name):
+    from Bio.Align.Applications import ClustalwCommandline
+    from Bio.Align.Applications import ClustalOmegaCommandline
+    from Bio import AlignIO
+    from Bio.Align import AlignInfo
+    from Bio.Align import MultipleSeqAlignment
+    import os
+
+    cluster_seqs_path = os.path.join(clustal_dir, pair_name + "_seq.fasta")
+    aln_file = os.path.join(clustal_dir, pair_name + "_seq.clu")
+    if not os.path.isdir(clustal_dir):
+        os.makedirs(clustal_dir)
+    if len(mappings) == 1:
+        save_fasta(cluster_seqs_path, mappings + mappings)
+    else:
+        save_fasta(cluster_seqs_path, mappings)
+
+    cmd = ClustalOmegaCommandline(infile=cluster_seqs_path, outfile=aln_file, force=True, threads=10)
+    stdout, stderr = cmd()
+    align = AlignIO.read(aln_file, "fasta")
+
+    summary_align = AlignInfo.SummaryInfo(align)
+    consensus = summary_align.gap_consensus(threshold=0, ambiguous='N')
+    consensus = str(consensus).replace('-', '')
+    return consensus
+
+
+def calc_metrics(labels_filename, monomers_filename, text=""):
     with open(labels_filename, "r") as labels_file:
-        for line in labels_file:
-            labels_array.append(int(line))
-    blocks_list_char_array, blocks_str_array, labels_and_monomers_map, monomers_str_array, centres_and_mblocks_map = parse_files(
-        labels_array)
+        labels_array = list(map(int, labels_file.readlines()))
+    blocks_list_char_array, blocks_str_array, labels_and_monomers_map, centres_and_mblocks_map = parse_files(
+        labels_array, monomers_str_array)
 
     print(text, "silhouette score:", silhouette_score(blocks_list_char_array, labels_array, 1000))
     print(text, "distortion:", distortion(blocks_str_array, labels_array, labels_and_monomers_map))
     print(text, "DBI", DBI(centres_and_mblocks_map.keys(), centres_and_mblocks_map))
 
 
-calc_metrics("out_hdbscan_1000.txt", "dbscan")
-calc_metrics("out_robust_1000.txt", "robust")
+calc_metrics("out_hdbscan_1000.txt", "out_monomers_hdbscan_1000", "dbscan")
+calc_metrics("out_robust_1000.txt", "out_monomers_robust_1000", "robust")
