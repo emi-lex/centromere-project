@@ -187,11 +187,11 @@ def R(m, m_blocks):
     return sum_distance / len(m_blocks)
 
 
-print("Silhouette score:", silhouette_score(blocks_list_char_array, labels_array))
-
-print("DBI:", DBI(monomers_str_array, centres_and_mblocks_map))
-
-print("Distortion:", distortion(blocks_str_array, labels_array, labels_and_monomers_map))
+# print("Silhouette score:", silhouette_score(blocks_list_char_array, labels_array))
+#
+# print("DBI:", DBI(monomers_str_array, centres_and_mblocks_map))
+#
+# print("Distortion:", distortion(blocks_str_array, labels_array, labels_and_monomers_map))
 
 # print("DBSCAN:\n", dbscan(blocks_list_char_array))
 
