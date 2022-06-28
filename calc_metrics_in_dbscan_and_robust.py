@@ -2,6 +2,9 @@ from Bio.Seq import Seq
 from task import silhouette_score, distortion, DBI, parse_centromerefa
 import numpy as np
 import Bio.Application
+from sys import argv
+
+name, final_decomposition_file, cen_file = argv
 
 def save_fasta(filename, orfs):
     with open(filename, "w") as output_handle:
@@ -42,8 +45,8 @@ def calc_metrics(labels_filename, monomers_filename, text=""):
     with open(labels_filename, "r") as labels_file:
         labels_array = list(map(int, labels_file.readlines()))
 
-    tsv_file = open("final_decomposition.tsv")
-    centromere_file = open("cenX.fa")
+    tsv_file = open(final_decomposition_file)
+    centromere_file = open(cen_file)
     centromere_str = parse_centromerefa(centromere_file)  # absolutely right
     tsv_array = [s.split() for s in tsv_file.readlines()[:1000]]  # absolutely right
     blocks_list_char_array = []
