@@ -23,6 +23,7 @@ def parse_files(labels_array, monomers_str_array):
             blocks_list_char_array.append(list(tmp))
 
 
+
     # blocks_str_array = [str(centromere_str[int(s[2]):int(s[3]) + 1]) for s in tsv_array]  # absolutely right
 
     blocks_str_array = []
@@ -62,7 +63,7 @@ def save_fasta(filename, orfs):
         fasta_out.write_file(orfs)
 
 
-def run_clustal(mappings, clustal_dir, pair_name):
+def run_clustal(mappings, clustal_dir, pair_name): #mappings -- лист мономерных блоков -- все последовательности данного кластера, зфшк_тфьу -- номер лейбла
     from Bio.Align.Applications import ClustalwCommandline
     from Bio.Align.Applications import ClustalOmegaCommandline
     from Bio import AlignIO
