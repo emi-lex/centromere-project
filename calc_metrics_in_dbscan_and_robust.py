@@ -1,7 +1,7 @@
 from Bio.Seq import Seq
 from task import silhouette_score, distortion, DBI, parse_centromerefa
 import numpy as np
-
+import Bio.Application
 
 def save_fasta(filename, orfs):
     with open(filename, "w") as output_handle:
@@ -73,16 +73,14 @@ def calc_metrics(labels_filename, monomers_filename, text=""):
         from Bio.SeqRecord import SeqRecord
         import os
         monomer = run_clustal(
-            [SeqRecord(Seq(blocks[i]), id=str(i), name=str(i), description="") for i in range(len(blocks))], os.getcwd(),
-            str(label))
+            [SeqRecord(Seq(blocks[i]), id=str(i), name=str(i), description="") for i in range(len(blocks))],
+            os.getcwd(), str(label))
         labels_and_monomers_map[label] = monomer
         monomers_str_array.append(monomer)
         centres_and_mblocks_map[monomer] = labels_and_clasters_map[label]
-
     print(text, "silhouette score:", silhouette_score(blocks_list_char_array, labels_array, 1000))
     print(text, "distortion:", distortion(blocks_str_array, labels_array, labels_and_monomers_map))
     print(text, "DBI", DBI(centres_and_mblocks_map.keys(), centres_and_mblocks_map))
-
 
 calc_metrics("out_hdbscan_1000.txt", "out_monomers_hdbscan_1000", "dbscan")
 # calc_metrics("out_robust_1000.txt", "out_monomers_robust_1000", "robust")
