@@ -6,7 +6,7 @@ from sys import argv
 import hdbscan
 import time
 
-name, final_decomposition, cen = argv
+name, final_decomposition, cen, t = argv
 
 
 def edlib_edit_distance(str1, str2):
@@ -37,7 +37,7 @@ def my_hdbscan(blocks_char_array):
     # clusterer = hdbscan.HDBSCAN()
     clusterer = hdbscan.HDBSCAN(algorithm='best', alpha=1.0, approx_min_span_tree=True,
                                 gen_min_span_tree=False, leaf_size=40, memory=Memory(cachedir=None),
-                                metric=edlib_edit_distance, min_cluster_size=50, min_samples=None, p=None)
+                                metric=edlib_edit_distance, min_cluster_size=50, min_samples=None, p=None, core_dist_n_jobs=t)
     clusterer.fit(blocks_str_np_array_num)
     end = time.time()
     with open('out_hdbscan_1000.txt', 'w') as f:
