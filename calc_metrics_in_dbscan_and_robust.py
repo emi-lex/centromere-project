@@ -85,5 +85,5 @@ def calc_metrics(labels_filename, monomers_filename, text=""):
     print(text, "distortion:", distortion(blocks_str_array, labels_array, labels_and_monomers_map))
     print(text, "DBI", DBI(centres_and_mblocks_map.keys(), centres_and_mblocks_map))
 
-calc_metrics("out_hdbscan_1000.txt", "out_monomers_hdbscan_1000", "dbscan")
+calc_metrics("out_hdbscan_1000.txt", "out_monomers_hdbscan_1000", "hdbscan")
 # calc_metrics("out_robust_1000.txt", "out_monomers_robust_1000", "robust")
